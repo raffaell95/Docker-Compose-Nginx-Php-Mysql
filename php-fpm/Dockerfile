@@ -1,4 +1,4 @@
-FROM php:7.1.9-fpm
+FROM php:7.2.14-fpm
  
 MAINTAINER Daniel Nogueira <danielnogueira.dev@gmail.com>
 
@@ -9,13 +9,16 @@ RUN apt-get update \
     openssl \
     nano
 
-# Common php-ext and requirements
-RUN apt-get install -y --no-install-recommends libpq-dev libz-dev \
+ # Common php-ext and requirements
+RUN apt-get install -y --no-install-recommends libxml2-dev \
  && docker-php-ext-install pcntl \
  && docker-php-ext-install session \
- && docker-php-ext-install phar \
+ # && docker-php-ext-install phar \
+ && docker-php-ext-install intl \
  && docker-php-ext-install iconv \
- && docker-php-ext-install pdo
+ && docker-php-ext-install pdo \
+ && docker-php-ext-install sockets \
+ && docker-php-ext-install soap
 
 #####################################
 # GD:
@@ -24,13 +27,14 @@ RUN apt-get install -y --no-install-recommends libpq-dev libz-dev \
 ARG INSTALL_GD=false
 RUN if [ ${INSTALL_GD} = true ]; then \
     # Install gd and requirements
-    apt-get install -y --no-install-recommends libjpeg-dev libpng12-dev libfreetype6-dev \
+    apt-get install -y --no-install-recommends libjpeg-dev libpng-dev libfreetype6-dev \
  && docker-php-ext-configure gd \
     --enable-gd-native-ttf \
     --with-jpeg-dir=/usr/lib \
     --with-freetype-dir=/usr/include/freetype2 \
  && docker-php-ext-install gd \
 ;fi
+
 
 #####################################
 # compression:
@@ -63,7 +67,10 @@ ARG INSTALL_MCRYPT=false
 RUN if [ ${INSTALL_MCRYPT} = true ]; then \
     # Install mcrypt and requirements
     apt-get install -y --no-install-recommends libmcrypt-dev \
- && docker-php-ext-install mcrypt \
+    && pecl install mcrypt-1.0.1 \
+    # && docker-php-ext-install mcrypt \
+    && docker-php-ext-enable mcrypt \
+    # && docker-php-ext-configure mcrypt \
 ;fi
 
 #####################################
@@ -90,11 +97,11 @@ RUN if [ ${INSTALL_PDO_MYSQL} = true ]; then \
 # PDO_POSTGRESQL:
 #####################################
 
-ARG INSTALL_PDO_POSTGRESQL=false
-RUN if [ ${INSTALL_PDO_POSTGRESQL} = true ]; then \
-    # Install pdo_pgsql
-    docker-php-ext-install pdo_pgsql \
-;fi
+# ARG INSTALL_PDO_POSTGRESQL=false
+# RUN if [ ${INSTALL_PDO_POSTGRESQL} = true ]; then \
+#     # Install pdo_pgsql
+#     docker-php-ext-install pdo_pgsql \
+# ;fi
 
 #####################################
 # Mysqli Modifications:
